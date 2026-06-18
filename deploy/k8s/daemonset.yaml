@@ -1,0 +1,76 @@
+# NemulAI Agent — Kubernetes DaemonSet
+# Runs one read-only agent pod per GPU node.
+#
+#   1. Create the API key secret:
+#        kubectl create secret generic nemulai \
+#          --namespace nemulai \
+#          --from-literal=api-key=alum_your_key_here
+#   2. Apply:
+#        kubectl apply -f daemonset.yaml
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: nemulai
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: nemulai-agent
+  namespace: nemulai
+  labels:
+    app.kubernetes.io/name: nemulai-agent
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: nemulai-agent
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: nemulai-agent
+    spec:
+      # Schedule only onto GPU nodes.
+      nodeSelector:
+        nvidia.com/gpu.present: "true"
+      tolerations:
+        - key: nvidia.com/gpu
+          operator: Exists
+          effect: NoSchedule
+      hostPID: true   # required to attribute GPU processes to host PIDs
+      containers:
+        - name: agent
+          image: ghcr.io/agentmulder404/nemulai-agent:latest
+          securityContext:
+            runAsNonRoot: false
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          env:
+            - name: ALUMINATAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: nemulai
+                  key: api-key
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            # Surface the k8s namespace as the default team tag.
+            - name: ALUMINATAI_TEAM
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+          volumeMounts:
+            - name: wal
+              mountPath: /var/lib/nemulai
+      volumes:
+        - name: wal
+          emptyDir: {}

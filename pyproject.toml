@@ -1,0 +1,92 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nemulai"
+version = "0.4.0"
+description = "GPU cost attribution and optimization agent — know exactly what every GPU costs"
+readme = "README.md"
+license = { text = "Apache-2.0" }
+requires-python = ">=3.9"
+keywords = ["gpu", "monitoring", "energy", "mlops", "cost", "nvidia", "amd", "rocm", "fine-tuning"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+dependencies = [
+    "nvidia-ml-py>=12.0.0",
+    "requests>=2.28",
+    "python-dotenv>=1.0",
+    "rich>=13.0",
+]
+
+[project.optional-dependencies]
+prometheus    = ["prometheus-client>=0.19"]
+secure        = ["cryptography>=42.0"]
+observability = ["PyYAML>=6.0"]
+benchmark     = ["numpy>=1.24"]
+dcgm          = ["pydcgm>=3.0"]
+learner       = ["vowpalwabbit>=9.9"]
+finetune      = [
+    "torch>=2.0",
+    "transformers>=4.40",
+    "peft>=0.10",
+    "trl>=0.8",
+    "datasets>=2.18",
+    "bitsandbytes>=0.43",
+    "accelerate>=0.28",
+]
+swarm         = []
+greentune     = [
+    "nemulai[finetune]",
+]
+all           = [
+    "prometheus-client>=0.19",
+    "cryptography>=42.0",
+    "PyYAML>=6.0",
+    "numpy>=1.24",
+    "vowpalwabbit>=9.9",
+    "nemulai[greentune]",
+]
+
+[project.scripts]
+nemulai = "nemulai.cli:main"
+
+[project.urls]
+Homepage = "https://nemulai.com"
+Documentation = "https://nemulai.com/docs/agent"
+Repository = "https://github.com/AgentMulder404/NemulAI"
+"Bug Tracker" = "https://github.com/AgentMulder404/NemulAI/issues"
+
+[tool.setuptools]
+packages = [
+    "nemulai",
+    "nemulai.attribution",
+    "nemulai.integrations",
+    "nemulai.schedulers",
+    "nemulai.efficiency",
+    "nemulai.finetune",
+    "nemulai.learner",
+    "nemulai.intelligence",
+]
+
+[tool.setuptools.package-dir]
+nemulai               = "."
+"nemulai.attribution"  = "attribution"
+"nemulai.integrations" = "integrations"
+"nemulai.schedulers"   = "schedulers"
+"nemulai.efficiency"   = "efficiency"
+"nemulai.finetune"     = "finetune"
+"nemulai.learner"      = "learner"
+"nemulai.intelligence" = "intelligence"
+
+[tool.setuptools.package-data]
+"nemulai" = ["*.txt", "*.md"]
