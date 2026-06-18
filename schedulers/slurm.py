@@ -130,8 +130,7 @@ class SlurmAdapter(SchedulerAdapter):
         jobs: list[JobMetadata] = []
         new_map: dict[int, JobMetadata] = {}
 
-        for line in result.stdout.strip().split("
-"):
+        for line in result.stdout.strip().split("\n"):
             if not line.strip():
                 continue
 
