@@ -186,7 +186,8 @@ def _cmd_bandit_status() -> int:
     print(f"{'─' * 40}")
     print(f"  Backend:              {stats['backend']}")
     print(f"  VW available:         {'yes' if _HAS_VW else 'no (using simple fallback)'}")
-    print(f"  Ready:                {'yes' if stats['ready'] else f'no (need {stats[\"min_corpus\"]} tuples, have {stats[\"corpus_size\"]})'}")
+    ready = "yes" if stats["ready"] else f"no (need {stats['min_corpus']} tuples, have {stats['corpus_size']})"
+    print(f"  Ready:                {ready}")
     print(f"  Corpus size:          {stats['corpus_size']}")
     print(f"  Model version:        {stats['model_version']}")
     print(f"  Updates since save:   {stats['updates_since_retrain']}")
