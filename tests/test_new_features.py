@@ -398,7 +398,7 @@ class TestMetricsServerStaleness(unittest.TestCase):
 
 class TestCircuitBreaker(unittest.TestCase):
     def test_circuit_opens_after_threshold(self):
-        with patch.dict(os.environ, {"ALUMINATAI_API_KEY": "test_key_123"}):
+        with patch.dict(os.environ, {"NEMULAI_API_KEY": "test_key_123"}):
             import importlib
             import config
             importlib.reload(config)
@@ -418,7 +418,7 @@ class TestCircuitBreaker(unittest.TestCase):
             self.assertFalse(result)
 
     def test_get_status_includes_circuit(self):
-        with patch.dict(os.environ, {"ALUMINATAI_API_KEY": "test_key_123"}):
+        with patch.dict(os.environ, {"NEMULAI_API_KEY": "test_key_123"}):
             import importlib
             import config
             importlib.reload(config)

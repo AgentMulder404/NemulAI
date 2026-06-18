@@ -61,7 +61,7 @@ def _init_fernet():
     """Return a Fernet instance derived from the API key, or None.
 
     Key derivation: SHA-256(API_KEY) → 32 raw bytes → URL-safe base64 → Fernet key.
-    Activated automatically when ALUMINATAI_API_KEY is set AND cryptography is installed.
+    Activated automatically when NEMULAI_API_KEY is set AND cryptography is installed.
     Falls back gracefully to plaintext WAL with a one-time WARNING if the package is absent.
     """
     if not API_KEY:

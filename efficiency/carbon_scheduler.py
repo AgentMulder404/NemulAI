@@ -17,6 +17,11 @@ from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 try:
+    from ..envcompat import env
+except (ImportError, ValueError):  # bare execution with repo root on sys.path
+    from envcompat import env
+
+try:
     from efficiency.carbon import ElectricityMapsClient, CarbonForecast
 except ImportError:
     ElectricityMapsClient = None  # type: ignore
@@ -100,7 +105,7 @@ def make_parser() -> argparse.ArgumentParser:
     parser.add_argument("--duration", required=True,
                         help="Job duration (e.g., '4h', '30m', '1.5h')")
     parser.add_argument("--zone", default="",
-                        help="Electricity Maps zone (default: ALUMINATAI_GRID_ZONE)")
+                        help="Electricity Maps zone (default: NEMULAI_GRID_ZONE)")
     parser.add_argument("--api-key", default="",
                         help="Electricity Maps API key")
     return parser
@@ -120,9 +125,9 @@ def _parse_duration(s: str) -> float:
 
 def run_carbon_schedule(args: argparse.Namespace) -> int:
     import os
-    zone = args.zone or os.getenv("ALUMINATAI_GRID_ZONE", "")
+    zone = args.zone or env("NEMULAI_GRID_ZONE", "")
     if not zone:
-        print("ERROR: --zone or ALUMINATAI_GRID_ZONE required")
+        print("ERROR: --zone or NEMULAI_GRID_ZONE required")
         return 1
 
     try:

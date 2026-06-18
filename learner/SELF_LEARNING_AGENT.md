@@ -29,7 +29,7 @@ The agent already runs a 20-stage sampling pipeline every 5 seconds. We hooked i
 2. **Every outcome window** (default 300s) — resolves pending tuples by comparing current energy/throughput to the pre-action snapshot, computes the reward
 3. **During upload flush** — ships completed tuples to the fleet aggregation API
 
-Everything is **off by default**. Set `ALUMINATAI_LEARNER_ENABLED=1` to start collecting.
+Everything is **off by default**. Set `NEMULAI_LEARNER_ENABLED=1` to start collecting.
 
 ---
 
@@ -78,9 +78,9 @@ nemulai learn export        # dump corpus as JSONL or CSV for offline analysis
 
 | Env Var | Default | Description |
 |---------|---------|-------------|
-| `ALUMINATAI_LEARNER_ENABLED` | `false` | Enable experience logging |
-| `ALUMINATAI_LEARNER_OUTCOME_WINDOW` | `300` | Seconds to wait before measuring outcome (60-1800) |
-| `ALUMINATAI_LEARNER_UPLOAD` | `false` | Upload completed tuples to fleet API |
+| `NEMULAI_LEARNER_ENABLED` | `false` | Enable experience logging |
+| `NEMULAI_LEARNER_OUTCOME_WINDOW` | `300` | Seconds to wait before measuring outcome (60-1800) |
+| `NEMULAI_LEARNER_UPLOAD` | `false` | Upload completed tuples to fleet API |
 
 ---
 
@@ -132,17 +132,17 @@ After the auto-tuner fires in the main loop, the bandit runs for each GPU:
 1. Encodes the current workload context (utilization, memory, power, temperature)
 2. Calls `bandit.suggest()` to get a power cap recommendation
 3. If the suggestion differs meaningfully from the current cap, submits it as a `source="bandit"` recommendation
-4. The recommendation goes through the normal approval workflow (unless `ALUMINATAI_BANDIT_AUTO_APPLY=1`)
+4. The recommendation goes through the normal approval workflow (unless `NEMULAI_BANDIT_AUTO_APPLY=1`)
 
 ### Configuration
 
 | Env Var | Default | Description |
 |---------|---------|-------------|
-| `ALUMINATAI_BANDIT_ENABLED` | `false` | Enable the contextual bandit |
-| `ALUMINATAI_BANDIT_EPSILON` | `0.1` | Exploration rate (0.01-0.5) |
-| `ALUMINATAI_BANDIT_RETRAIN_EVERY` | `500` | Checkpoint interval (interactions) |
-| `ALUMINATAI_BANDIT_AUTO_APPLY` | `false` | Auto-apply suggestions (skip approval) |
-| `ALUMINATAI_BANDIT_MIN_CORPUS` | `1000` | Minimum tuples before activation |
+| `NEMULAI_BANDIT_ENABLED` | `false` | Enable the contextual bandit |
+| `NEMULAI_BANDIT_EPSILON` | `0.1` | Exploration rate (0.01-0.5) |
+| `NEMULAI_BANDIT_RETRAIN_EVERY` | `500` | Checkpoint interval (interactions) |
+| `NEMULAI_BANDIT_AUTO_APPLY` | `false` | Auto-apply suggestions (skip approval) |
+| `NEMULAI_BANDIT_MIN_CORPUS` | `1000` | Minimum tuples before activation |
 
 ### CLI
 

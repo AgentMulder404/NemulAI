@@ -30,6 +30,11 @@ try:
 except ImportError:
     NVML_AVAILABLE = False
 
+try:
+    from ..envcompat import has_known_prefix
+except (ImportError, ValueError):  # bare execution with repo root on sys.path
+    from envcompat import has_known_prefix
+
 logger = logging.getLogger(__name__)
 
 _IS_LINUX = sys.platform.startswith("linux")
@@ -40,16 +45,22 @@ _ENVIRON_ALLOWLIST = frozenset({
     "SLURM_JOB_ID",
     "RUNAI_JOB_NAME",
     "KUBERNETES_SERVICE_HOST",
+    "NEMULAI_TEAM",
+    "NEMULAI_MODEL",
+    # Legacy names — still honored for agents tagged before the rebrand.
     "ALUMINATAI_TEAM",
     "ALUMINATAI_MODEL",
 })
-_ALUMINATAI_PREFIX = "ALUMINATAI_"
 
 
 def _filter_environ(env: dict) -> dict:
-    """Return only attribution-relevant env vars; drop secrets and noise."""
+    """Return only attribution-relevant env vars; drop secrets and noise.
+
+    Both the current ``NEMULAI_*`` prefix and the legacy ``ALUMINATAI_*`` prefix
+    are retained so jobs tagged before the rebrand still attribute correctly.
+    """
     return {k: v for k, v in env.items()
-            if k in _ENVIRON_ALLOWLIST or k.startswith(_ALUMINATAI_PREFIX)}
+            if k in _ENVIRON_ALLOWLIST or has_known_prefix(k)}
 
 
 @dataclass
@@ -107,7 +118,7 @@ class ProcessProbe:
         for p in nvml_procs:
             if _IS_LINUX:
                 environ = self._read_environ(p.pid)
-                # Inherit ALUMINATAI_* tags from ancestor processes (e.g. launcher scripts)
+                # Inherit NEMULAI_* tags from ancestor processes (e.g. launcher scripts)
                 ancestor_env = self._walk_parent_environ(p.pid)
                 for k, v in ancestor_env.items():
                     if k not in environ:
@@ -216,12 +227,12 @@ class ProcessProbe:
     def _walk_parent_environ(self, pid: int, depth: int = 3) -> dict[str, str]:
         """
         Walk up to `depth` levels of the process tree looking for an ancestor
-        whose environ contains ALUMINATAI_TEAM.
+        whose environ contains a team tag (NEMULAI_TEAM, or legacy ALUMINATAI_TEAM).
 
         Returns the first matching ancestor's full environ dict, or {} if none
         is found. Stops early at PID <= 1 (init/idle).
 
-        This lets a launcher script that sets ALUMINATAI_TEAM propagate the
+        This lets a launcher script that sets NEMULAI_TEAM propagate the
         tag into GPU child processes that don't set it themselves.
         """
         current_pid = pid
@@ -230,7 +241,7 @@ class ProcessProbe:
             if ppid is None or ppid <= 1:
                 break
             parent_env = self._read_environ(ppid)  # already filtered by _filter_environ
-            if "ALUMINATAI_TEAM" in parent_env:
+            if "NEMULAI_TEAM" in parent_env or "ALUMINATAI_TEAM" in parent_env:
                 return parent_env
             current_pid = ppid
         return {}

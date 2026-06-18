@@ -37,7 +37,7 @@ The waste compounds quietly:
 
 - **Per-job cost attribution** — energy and dollars per training/inference run, not just per machine
 - **Idle & underutilization detection** — flags GPUs running idle (<1%) or underused (<10%), with the dollars wasted
-- **Team / model / customer chargeback** — split spend with one environment variable (`ALUMINATAI_TEAM`, `ALUMINATAI_MODEL`)
+- **Team / model / customer chargeback** — split spend with one environment variable (`NEMULAI_TEAM`, `NEMULAI_MODEL`)
 - **Real-time power monitoring** — samples NVML every 5 seconds via `nvidia-ml-py`
 - **Multi-vendor** — NVIDIA, AMD (ROCm), Intel Gaudi, Intel Arc, Apple Silicon, and CPU-only (RAPL)
 - **WAL-backed reliability** — metrics buffer locally during API outages and replay on reconnect
@@ -54,7 +54,7 @@ pip install nemulai
 ```
 
 ```bash
-export ALUMINATAI_API_KEY=alum_your_key_here
+export NEMULAI_API_KEY=alum_your_key_here
 nemulai
 ```
 
@@ -64,7 +64,7 @@ That's it — the agent auto-detects your hardware and starts streaming cost dat
 
 ```bash
 docker run --rm --runtime=nvidia --pid=host \
-  -e ALUMINATAI_API_KEY=alum_your_key_here \
+  -e NEMULAI_API_KEY=alum_your_key_here \
   ghcr.io/agentmulder404/nemulai-agent:latest
 ```
 
@@ -87,10 +87,10 @@ All settings are environment variables — no config files required.
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `ALUMINATAI_API_KEY` | *(required)* | Your API key from the dashboard |
-| `ALUMINATAI_API_ENDPOINT` | `https://nemulai.com/api/metrics/ingest` | Ingest endpoint (change to self-host) |
-| `ALUMINATAI_TEAM` | *(none)* | Team tag for chargeback attribution |
-| `ALUMINATAI_MODEL` | *(none)* | Model tag for per-experiment tracking |
+| `NEMULAI_API_KEY` | *(required)* | Your API key from the dashboard |
+| `NEMULAI_API_ENDPOINT` | `https://nemulai.com/api/metrics/ingest` | Ingest endpoint (change to self-host) |
+| `NEMULAI_TEAM` | *(none)* | Team tag for chargeback attribution |
+| `NEMULAI_MODEL` | *(none)* | Model tag for per-experiment tracking |
 | `SAMPLE_INTERVAL` | `5.0` | Seconds between NVML samples |
 | `UPLOAD_INTERVAL` | `60` | Seconds between metric flushes |
 | `METRICS_PORT` | `9100` | Prometheus scrape port (`0` = disabled) |
@@ -104,9 +104,9 @@ See [`deploy/nemulai-agent.env.example`](deploy/nemulai-agent.env.example) for t
 Tag workloads at launch for per-job cost breakdown:
 
 ```bash
-ALUMINATAI_TEAM=nlp-team \
-ALUMINATAI_MODEL=llama3-finetune \
-ALUMINATAI_API_KEY=alum_... \
+NEMULAI_TEAM=nlp-team \
+NEMULAI_MODEL=llama3-finetune \
+NEMULAI_API_KEY=alum_... \
 python train.py
 ```
 
@@ -168,7 +168,7 @@ Any optimization action opens an observation window and **rolls back automatical
 
 ```bash
 sudo cp deploy/nemulai-agent.service /etc/systemd/system/
-echo "ALUMINATAI_API_KEY=alum_your_key_here" | sudo tee /etc/nemulai/agent.env
+echo "NEMULAI_API_KEY=alum_your_key_here" | sudo tee /etc/nemulai/agent.env
 sudo chmod 600 /etc/nemulai/agent.env
 sudo systemctl enable --now nemulai-agent
 ```
@@ -192,8 +192,8 @@ nemulai &
 The agent is fully functional without the hosted dashboard. Point it at your own ingest endpoint:
 
 ```bash
-ALUMINATAI_API_ENDPOINT=https://your-internal-api.com/api/metrics/ingest \
-ALUMINATAI_API_KEY=your_key \
+NEMULAI_API_ENDPOINT=https://your-internal-api.com/api/metrics/ingest \
+NEMULAI_API_KEY=your_key \
 nemulai
 ```
 

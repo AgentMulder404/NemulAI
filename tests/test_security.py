@@ -17,7 +17,7 @@
 Security hardening unit tests.
 
 Tests:
-  1.  Env allowlist: secrets are filtered; ALUMINATAI_* keys are kept
+  1.  Env allowlist: secrets are filtered; NEMULAI_* keys are kept
   2.  WAL encrypt/decrypt round-trip: row survives write → read intact
   3.  WAL key mismatch: row encrypted with key_A is silently skipped when read with key_B
   4.  Prometheus Basic Auth: 401 without credentials; 200 with correct credentials
@@ -71,7 +71,7 @@ class TestEnvironAllowlist(unittest.TestCase):
         dirty = {
             "AWS_SECRET_ACCESS_KEY": "supersecret",
             "DATABASE_URL": "postgres://user:pw@host/db",
-            "ALUMINATAI_TEAM": "ml-infra",
+            "NEMULAI_TEAM": "ml-infra",
             "SLURM_JOB_ID": "12345",
             "PATH": "/usr/bin:/bin",
         }
@@ -79,19 +79,19 @@ class TestEnvironAllowlist(unittest.TestCase):
         self.assertNotIn("AWS_SECRET_ACCESS_KEY", result)
         self.assertNotIn("DATABASE_URL", result)
         self.assertNotIn("PATH", result)
-        self.assertIn("ALUMINATAI_TEAM", result)
+        self.assertIn("NEMULAI_TEAM", result)
         self.assertIn("SLURM_JOB_ID", result)
 
     def test_nemulai_prefix_kept(self):
         from attribution.process_probe import _filter_environ
         env = {
-            "ALUMINATAI_MODEL": "gpt4",
-            "ALUMINATAI_CUSTOM_TAG": "prod",
+            "NEMULAI_MODEL": "gpt4",
+            "NEMULAI_CUSTOM_TAG": "prod",
             "SECRET_TOKEN": "abc",
         }
         result = _filter_environ(env)
-        self.assertIn("ALUMINATAI_MODEL", result)
-        self.assertIn("ALUMINATAI_CUSTOM_TAG", result)
+        self.assertIn("NEMULAI_MODEL", result)
+        self.assertIn("NEMULAI_CUSTOM_TAG", result)
         self.assertNotIn("SECRET_TOKEN", result)
 
     def test_allowlisted_scheduler_keys_kept(self):

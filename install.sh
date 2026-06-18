@@ -50,7 +50,7 @@ Options:
   --local        Install from local source directory instead of PyPI
                  (for development or air-gapped installs with a downloaded wheel)
   --no-service   Install the Python package only; skip systemd setup
-  --unattended   Non-interactive; requires ALUMINATAI_API_KEY env var to be set
+  --unattended   Non-interactive; requires NEMULAI_API_KEY env var to be set
   -y             Alias for --unattended
 
 Examples:
@@ -65,7 +65,7 @@ Examples:
   bash install.sh --no-service
 
   # CI / non-interactive
-  ALUMINATAI_API_KEY=alum_xxx bash install.sh --unattended
+  NEMULAI_API_KEY=alum_xxx bash install.sh --unattended
 EOF
             exit 0
             ;;
@@ -174,7 +174,7 @@ ok "Binary: $AGENT_BIN"
 if [[ $SKIP_SERVICE -eq 1 ]]; then
     echo
     echo -e "${GREEN}Package installed.${NC}  Start with:"
-    echo "  export ALUMINATAI_API_KEY=alum_your_key"
+    echo "  export NEMULAI_API_KEY=alum_your_key"
     echo "  nemulai"
     exit 0
 fi
@@ -201,10 +201,10 @@ ok "Directories created  (/var/lib/nemulai, /var/log/nemulai, /etc/nemulai)"
 step "API key"
 
 if [[ $UNATTENDED -eq 1 ]]; then
-    if [[ -z "${ALUMINATAI_API_KEY:-}" ]]; then
-        die "--unattended requires ALUMINATAI_API_KEY env var to be set."
+    if [[ -z "${NEMULAI_API_KEY:-}" ]]; then
+        die "--unattended requires NEMULAI_API_KEY env var to be set."
     fi
-    API_KEY="$ALUMINATAI_API_KEY"
+    API_KEY="$NEMULAI_API_KEY"
     echo "  Using API key from environment."
 elif [[ -f /etc/nemulai/agent.env ]]; then
     warn "Existing /etc/nemulai/agent.env found — keeping it."
@@ -236,8 +236,8 @@ if [[ -n "$API_KEY" ]]; then
 #
 # Full reference: https://nemulai.com/docs/agent#configuration
 
-ALUMINATAI_API_KEY=$API_KEY
-ALUMINATAI_API_ENDPOINT=https://nemulai.com/api/metrics/ingest
+NEMULAI_API_KEY=$API_KEY
+NEMULAI_API_ENDPOINT=https://nemulai.com/api/metrics/ingest
 SAMPLE_INTERVAL=5.0
 UPLOAD_INTERVAL=60
 METRICS_PORT=9100

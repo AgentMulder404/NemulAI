@@ -20,8 +20,8 @@ Resolution priority (first match wins):
   1. SLURM_JOB_ID in environ  → SlurmAdapter.resolve_job()
   2. RUNAI_JOB_NAME in environ → RunaiAdapter.resolve_job()
   3. KUBERNETES_SERVICE_HOST   → read cgroup for pod UID → KubernetesAdapter.resolve_pod_by_uid()
-  4. ALUMINATAI_TEAM + ALUMINATAI_MODEL env vars (manual override, anti-spoof checked)
-  5. Custom attribution rules file (ALUMINATAI_ATTRIBUTION_CONFIG)
+  4. NEMULAI_TEAM + NEMULAI_MODEL env vars (manual override, anti-spoof checked)
+  5. Custom attribution rules file (NEMULAI_ATTRIBUTION_CONFIG)
   6. Built-in cmdline heuristics (jupyter, vllm, torchserve, …)
   7. None (unresolved — power is still tracked under "pid:<pid>")
 """
@@ -32,6 +32,11 @@ import sys
 from typing import Optional, TYPE_CHECKING
 
 from .process_probe import ProcessInfo
+
+try:
+    from ..envcompat import env_from
+except (ImportError, ValueError):  # bare execution with repo root on sys.path
+    from envcompat import env_from
 
 if TYPE_CHECKING:
     from schedulers.base import SchedulerAdapter, JobMetadata
@@ -117,13 +122,14 @@ class PidResolver:
                 if job:
                     return job
 
-        # 4. Manual ALUMINATAI env vars (with optional anti-spoofing)
-        team = env.get("ALUMINATAI_TEAM")
-        model = env.get("ALUMINATAI_MODEL", "untagged")
+        # 4. Manual NEMULAI env vars (with optional anti-spoofing).
+        #    Legacy ALUMINATAI_* names are honored via env_from().
+        team = env_from(env, "NEMULAI_TEAM") or None
+        model = env_from(env, "NEMULAI_MODEL", "untagged")
         if team:
             if _TRUSTED_UIDS and proc.owner_uid not in _TRUSTED_UIDS:
                 logger.warning(
-                    "PID %d claims ALUMINATAI_TEAM=%r but UID %d is not in TRUSTED_UIDS"
+                    "PID %d claims NEMULAI_TEAM=%r but UID %d is not in TRUSTED_UIDS"
                     " — skipping manual tag",
                     proc.pid, team, proc.owner_uid,
                 )

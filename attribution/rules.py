@@ -29,7 +29,7 @@ Config file format:
   }
 
 Config file search order:
-  1. ALUMINATAI_ATTRIBUTION_CONFIG env var (explicit path)
+  1. NEMULAI_ATTRIBUTION_CONFIG env var (explicit path)
   2. ./attribution_rules.json  (working directory)
   3. ~/.config/nemulai/attribution_rules.json
   4. Not found → rules disabled silently (no behaviour change)
@@ -38,6 +38,11 @@ Config file search order:
 import json
 import logging
 import os
+
+try:
+    from ..envcompat import env
+except (ImportError, ValueError):  # bare execution with repo root on sys.path
+    from envcompat import env
 import re
 from dataclasses import dataclass, field
 from typing import Optional
@@ -115,7 +120,7 @@ class AttributionRules:
     def _find_config_file(self) -> Optional[str]:
         """Search standard locations for the rules config file."""
         # 1. Explicit env var (read dynamically so tests can patch os.environ)
-        explicit = os.getenv("ALUMINATAI_ATTRIBUTION_CONFIG", "")
+        explicit = env("NEMULAI_ATTRIBUTION_CONFIG", "")
         if explicit and os.path.isfile(explicit):
             return explicit
 

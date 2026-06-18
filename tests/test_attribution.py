@@ -20,11 +20,11 @@ Tests:
   1.  DDP: 8 PIDs with same SLURM_JOB_ID → 1 result, gpu_fraction=1.0, confidence="scheduler"
   2.  Multi-tenant: 2 PIDs from different jobs (60/40 mem split) → 2 results summing to 1.0
   3.  No-PID scheduler fallback → confidence="scheduler_poll", gpu_fraction=1.0
-  4.  No-PID, no scheduler, ALUMINATAI_IDLE_TEAM set → confidence="idle"
+  4.  No-PID, no scheduler, NEMULAI_IDLE_TEAM set → confidence="idle"
   5.  Heuristic match: jupyter cmdline → confidence="heuristic", scheduler_source="heuristic"
-  6.  Parent PID walk: ancestor environ with ALUMINATAI_TEAM → tag inherited
+  6.  Parent PID walk: ancestor environ with NEMULAI_TEAM → tag inherited
   7.  Rules file match: custom JSON rules file → correct team/model assigned
-  8.  Spoofing guard: untrusted UID with ALUMINATAI_TEAM → manual tag ignored
+  8.  Spoofing guard: untrusted UID with NEMULAI_TEAM → manual tag ignored
 """
 
 from __future__ import annotations
@@ -192,7 +192,7 @@ class TestIdleFallback(unittest.TestCase):
         scheduler = NullAdapter()
         engine = build_engine([], scheduler)
 
-        with patch.dict(os.environ, {"ALUMINATAI_IDLE_TEAM": "infra"}):
+        with patch.dict(os.environ, {"NEMULAI_IDLE_TEAM": "infra"}):
             results = engine.resolve(handle=None, gpu_index=0, total_power_w=50.0, energy_delta_j=250.0)
 
         self.assertEqual(len(results), 1)
@@ -206,7 +206,7 @@ class TestIdleFallback(unittest.TestCase):
         scheduler = NullAdapter()
         engine = build_engine([], scheduler)
 
-        env = {k: v for k, v in os.environ.items() if k != "ALUMINATAI_IDLE_TEAM"}
+        env = {k: v for k, v in os.environ.items() if k != "NEMULAI_IDLE_TEAM"}
         with patch.dict(os.environ, env, clear=True):
             results = engine.resolve(handle=None, gpu_index=0, total_power_w=50.0, energy_delta_j=250.0)
 
@@ -252,7 +252,7 @@ class TestHeuristicResolution(unittest.TestCase):
         scheduler = NullAdapter()
         engine = build_engine([proc], scheduler)
 
-        env_without_idle = {k: v for k, v in os.environ.items() if k != "ALUMINATAI_IDLE_TEAM"}
+        env_without_idle = {k: v for k, v in os.environ.items() if k != "NEMULAI_IDLE_TEAM"}
         with patch.dict(os.environ, env_without_idle, clear=True):
             results = engine.resolve(handle=None, gpu_index=0, total_power_w=50.0, energy_delta_j=None)
 
@@ -261,17 +261,17 @@ class TestHeuristicResolution(unittest.TestCase):
 
 
 class TestParentPidWalk(unittest.TestCase):
-    """Case 6: Ancestor process has ALUMINATAI_TEAM in its environ."""
+    """Case 6: Ancestor process has NEMULAI_TEAM in its environ."""
 
     def test_inherits_team_from_parent(self):
         probe = ProcessProbe()
         child_pid, parent_pid = 5000, 4000
 
         with patch.object(probe, "_read_ppid", side_effect=lambda p: parent_pid if p == child_pid else None), \
-             patch.object(probe, "_read_environ", side_effect=lambda p: {"ALUMINATAI_TEAM": "nlp-team"} if p == parent_pid else {}):
+             patch.object(probe, "_read_environ", side_effect=lambda p: {"NEMULAI_TEAM": "nlp-team"} if p == parent_pid else {}):
             result = probe._walk_parent_environ(child_pid)
 
-        self.assertEqual(result.get("ALUMINATAI_TEAM"), "nlp-team")
+        self.assertEqual(result.get("NEMULAI_TEAM"), "nlp-team")
 
     def test_no_match_returns_empty(self):
         probe = ProcessProbe()
@@ -310,7 +310,7 @@ class TestAttributionRulesFile(unittest.TestCase):
             ]
         })
         try:
-            with patch.dict(os.environ, {"ALUMINATAI_ATTRIBUTION_CONFIG": path}):
+            with patch.dict(os.environ, {"NEMULAI_ATTRIBUTION_CONFIG": path}):
                 rules = AttributionRules()
                 rules.load()
 
@@ -329,7 +329,7 @@ class TestAttributionRulesFile(unittest.TestCase):
             ]
         })
         try:
-            with patch.dict(os.environ, {"ALUMINATAI_ATTRIBUTION_CONFIG": path}):
+            with patch.dict(os.environ, {"NEMULAI_ATTRIBUTION_CONFIG": path}):
                 rules = AttributionRules()
                 rules.load()
 
@@ -340,7 +340,7 @@ class TestAttributionRulesFile(unittest.TestCase):
 
     def test_no_rules_file_is_noop(self):
         """Missing config file → load() silently no-ops, match() returns None."""
-        with patch.dict(os.environ, {"ALUMINATAI_ATTRIBUTION_CONFIG": "/nonexistent/path.json"}):
+        with patch.dict(os.environ, {"NEMULAI_ATTRIBUTION_CONFIG": "/nonexistent/path.json"}):
             rules = AttributionRules()
             rules.load()
 
@@ -356,7 +356,7 @@ class TestAttributionRulesFile(unittest.TestCase):
                              cmdline="python special_workload.py")
             scheduler = NullAdapter()
 
-            with patch.dict(os.environ, {"ALUMINATAI_ATTRIBUTION_CONFIG": path}):
+            with patch.dict(os.environ, {"NEMULAI_ATTRIBUTION_CONFIG": path}):
                 engine = build_engine([proc], scheduler)
                 results = engine.resolve(handle=None, gpu_index=0, total_power_w=100.0, energy_delta_j=None)
 
@@ -370,14 +370,14 @@ class TestAttributionRulesFile(unittest.TestCase):
 
 
 class TestSpoofingGuard(unittest.TestCase):
-    """Case 8: Untrusted UID with ALUMINATAI_TEAM → manual tag ignored."""
+    """Case 8: Untrusted UID with NEMULAI_TEAM → manual tag ignored."""
 
     def test_untrusted_uid_skips_manual_tag(self):
-        """Process from UID 1001 claiming ALUMINATAI_TEAM when only UID 0 is trusted."""
+        """Process from UID 1001 claiming NEMULAI_TEAM when only UID 0 is trusted."""
         proc = ProcessInfo(
             pid=1234,
             gpu_memory_bytes=1 * 1024**3,
-            environ={"ALUMINATAI_TEAM": "malicious-team"},
+            environ={"NEMULAI_TEAM": "malicious-team"},
             owner_uid=1001,
         )
         scheduler = NullAdapter()
@@ -390,11 +390,11 @@ class TestSpoofingGuard(unittest.TestCase):
         self.assertIsNone(job)
 
     def test_trusted_uid_allows_manual_tag(self):
-        """Root process (UID 0) setting ALUMINATAI_TEAM should be honoured."""
+        """Root process (UID 0) setting NEMULAI_TEAM should be honoured."""
         proc = ProcessInfo(
             pid=1235,
             gpu_memory_bytes=1 * 1024**3,
-            environ={"ALUMINATAI_TEAM": "trusted-team"},
+            environ={"NEMULAI_TEAM": "trusted-team"},
             owner_uid=0,
         )
         scheduler = NullAdapter()
@@ -412,7 +412,7 @@ class TestSpoofingGuard(unittest.TestCase):
         proc = ProcessInfo(
             pid=1236,
             gpu_memory_bytes=1 * 1024**3,
-            environ={"ALUMINATAI_TEAM": "any-team"},
+            environ={"NEMULAI_TEAM": "any-team"},
             owner_uid=9999,
         )
         scheduler = NullAdapter()

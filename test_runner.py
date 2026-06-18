@@ -718,7 +718,7 @@ def run_test(args: argparse.Namespace) -> int:
     _log(f"GPU: {gpu_info['name']} | {gpu_info['vram_total_gb']} GB VRAM | Idle: {gpu_info['idle_power_w']}W | Driver: {gpu_info['driver']}")
 
     if args.team:
-        os.environ["ALUMINATAI_TEAM"] = args.team
+        os.environ["NEMULAI_TEAM"] = args.team
 
     # Idle baseline
     idle_power = _measure_idle(args.gpu, 10.0)

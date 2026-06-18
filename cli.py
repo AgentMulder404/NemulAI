@@ -22,7 +22,7 @@ runs this module.  sys.path is patched first so the bare-import modules
 directory regardless of the working directory.
 
 The --config/-c flag is pre-parsed here (before any other imports) so that
-config.py's _load_config_file() sees the ALUMINATAI_CONFIG env var when it
+config.py's _load_config_file() sees the NEMULAI_CONFIG env var when it
 runs at import time.
 """
 import argparse
@@ -51,7 +51,7 @@ def main() -> None:
     _known, _rest = _pre.parse_known_args()
 
     if _known.config:
-        os.environ["ALUMINATAI_CONFIG"] = _known.config
+        os.environ["NEMULAI_CONFIG"] = _known.config
 
     if _known.subcommand == "test":
         from test_runner import make_parser as test_parser, run_test  # noqa: PLC0415

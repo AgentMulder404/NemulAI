@@ -21,7 +21,7 @@ Maps GPU allocations to jobs via GRES assignments and cgroup inspection.
 
 Attribution convention:
   team_id:   Slurm account (--account=ml-research)
-  model_tag: ALUMINATAI_MODEL env var, or --comment="model:llama-3-70b"
+  model_tag: NEMULAI_MODEL env var, or --comment="model:llama-3-70b"
   user:      Slurm username
 
 Works in two modes:
@@ -30,6 +30,11 @@ Works in two modes:
 """
 
 import os
+
+try:
+    from ..envcompat import env
+except (ImportError, ValueError):  # bare execution with repo root on sys.path
+    from envcompat import env
 import re
 import subprocess
 import socket
@@ -243,7 +248,7 @@ class SlurmAdapter(SchedulerAdapter):
     def _extract_model_tag_from_env(self) -> str:
         """Read model tag from environment (when inside a job)."""
         # Direct env var
-        model = os.getenv("ALUMINATAI_MODEL", "")
+        model = env("NEMULAI_MODEL", "")
         if model:
             return model
 
@@ -278,7 +283,7 @@ class SlurmAdapter(SchedulerAdapter):
         return "untagged"
 
     def _fetch_model_from_scontrol(self, job_id: str) -> str:
-        """Attempt to read ALUMINATAI_MODEL from job's environment via scontrol."""
+        """Attempt to read NEMULAI_MODEL from job's environment via scontrol."""
         try:
             result = subprocess.run(
                 ["scontrol", "show", "job", job_id],

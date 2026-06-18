@@ -3,7 +3,7 @@
 Multi-Workload GPU Power Attribution Test
 ==========================================
 Launches 3 concurrent GPU jobs (inference / training / memory-stress),
-each tagged with a different ALUMINATAI_TEAM env var.
+each tagged with a different NEMULAI_TEAM env var.
 
 Monitors NVML per-process memory every 10s for 5 minutes, attributes
 total GPU power proportionally, then prints a summary table.
@@ -12,7 +12,7 @@ Usage:
     python multi_workload_attribution.py
 
 Requires the NemulAI agent running in another terminal:
-    ALUMINATAI_API_KEY=<key> ALUMINATAI_API_ENDPOINT=https://www.nemulai.com/v1/metrics/ingest nemulai
+    NEMULAI_API_KEY=<key> NEMULAI_API_ENDPOINT=https://www.nemulai.com/v1/metrics/ingest nemulai
 """
 import os, sys, time, signal, subprocess, textwrap, pathlib
 from collections import defaultdict
@@ -122,7 +122,7 @@ def write_and_launch(name, code, team):
     p = subprocess.Popen(
         [sys.executable, str(path)],
         # Pass team in launch env so /proc/<pid>/environ contains it
-        env={**os.environ, 'ALUMINATAI_TEAM': team},
+        env={**os.environ, 'NEMULAI_TEAM': team},
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
     )
@@ -137,7 +137,7 @@ def _read_environ_team(pid):
         with open(f'/proc/{pid}/environ', 'rb') as f:
             env = f.read().decode('utf-8', errors='replace')
         for kv in env.split('\x00'):
-            if kv.startswith('ALUMINATAI_TEAM='):
+            if kv.startswith('NEMULAI_TEAM='):
                 return kv.split('=', 1)[1]
     except (PermissionError, FileNotFoundError):
         pass
@@ -165,7 +165,7 @@ def _ppid(pid):
     return None
 
 def build_team_map():
-    """Scan /proc for all processes with ALUMINATAI_TEAM, map all their PID variants."""
+    """Scan /proc for all processes with NEMULAI_TEAM, map all their PID variants."""
     global _any_pid_to_team
     result = {}
     try:

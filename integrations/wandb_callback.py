@@ -34,14 +34,19 @@ Or use the context manager:
         # ... training ...
 
 Env vars:
-    ALUMINATAI_API_KEY        Required for cost lookup
-    ALUMINATAI_API_ENDPOINT   API base URL (default: production)
+    NEMULAI_API_KEY        Required for cost lookup
+    NEMULAI_API_ENDPOINT   API base URL (default: production)
 """
 
 from __future__ import annotations
 
 import logging
 import os
+
+try:
+    from ..envcompat import env
+except (ImportError, ValueError):  # bare execution with repo root on sys.path
+    from envcompat import env
 import time
 from contextlib import contextmanager
 from typing import Generator, Optional
@@ -60,8 +65,8 @@ class NemulAIWandbCallback:
     Logs GPU energy and cost to W&B runs.
 
     On run start:
-      - Sets ALUMINATAI_MODEL to wandb.run.name
-      - Sets ALUMINATAI_TEAM to wandb.run.entity/project
+      - Sets NEMULAI_MODEL to wandb.run.name
+      - Sets NEMULAI_TEAM to wandb.run.entity/project
 
     On run end:
       - Fetches energy from NemulAI API
@@ -73,9 +78,8 @@ class NemulAIWandbCallback:
         api_key: Optional[str] = None,
         api_endpoint: Optional[str] = None,
     ):
-        self.api_key = api_key or os.getenv("ALUMINATAI_API_KEY", "")
-        self.api_endpoint = api_endpoint or os.getenv(
-            "ALUMINATAI_API_ENDPOINT", "https://nemulai.com/api/metrics/ingest"
+        self.api_key = api_key or env("NEMULAI_API_KEY", "")
+        self.api_endpoint = api_endpoint or env("NEMULAI_API_ENDPOINT", "https://nemulai.com/api/metrics/ingest"
         )
         self._start_times: dict[str, float] = {}
 
@@ -89,8 +93,8 @@ class NemulAIWandbCallback:
 
         try:
             team_id = f"{run.entity}/{run.project}" if run.entity else run.project
-            os.environ["ALUMINATAI_MODEL"] = run.name or run_id
-            os.environ["ALUMINATAI_TEAM"] = team_id
+            os.environ["NEMULAI_MODEL"] = run.name or run_id
+            os.environ["NEMULAI_TEAM"] = team_id
             logger.info("NemulAI: tracking W&B run '%s' (%s)", run.name, team_id)
         except Exception as exc:
             logger.warning("NemulAI WandbCallback on_run_start: %s", exc)
@@ -121,8 +125,8 @@ class NemulAIWandbCallback:
         except Exception as exc:
             logger.warning("NemulAI WandbCallback on_run_end: %s", exc)
         finally:
-            os.environ.pop("ALUMINATAI_MODEL", None)
-            os.environ.pop("ALUMINATAI_TEAM", None)
+            os.environ.pop("NEMULAI_MODEL", None)
+            os.environ.pop("NEMULAI_TEAM", None)
 
     @contextmanager
     def track(self, run) -> Generator[None, None, None]:

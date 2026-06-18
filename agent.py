@@ -43,6 +43,8 @@ import io
 import json
 import logging
 import os
+
+from envcompat import env
 import signal
 import socket
 import sys
@@ -552,7 +554,7 @@ class Agent:
         self.output_csv = output_csv
         self.duration = duration
         self.quiet = quiet
-        self.job_uuid = job_uuid or os.getenv("ALUMINATAI_JOB_UUID")
+        self.job_uuid = job_uuid or env("NEMULAI_JOB_UUID")
         self.dry_run = dry_run
         self.prometheus_only = prometheus_only
 
@@ -687,11 +689,11 @@ class Agent:
                 self.experience_logger = ExperienceLogger(
                     data_dir=DATA_DIR,
                     machine_id=get_machine_id(),
-                    outcome_window_s=float(os.getenv("ALUMINATAI_LEARNER_OUTCOME_WINDOW", "300")),
+                    outcome_window_s=float(env("NEMULAI_LEARNER_OUTCOME_WINDOW", "300")),
                 )
                 self.experience_logger.load_from_wal()
                 log.info("ExperienceLogger: enabled (outcome_window=%ss)",
-                         os.getenv("ALUMINATAI_LEARNER_OUTCOME_WINDOW", "300"))
+                         env("NEMULAI_LEARNER_OUTCOME_WINDOW", "300"))
         except (ImportError, AttributeError):
             pass
 
@@ -1924,8 +1926,8 @@ _ENV_TEMPLATE = """\
 # Edit this file, then restart: sudo systemctl restart nemulai-agent
 # Full reference: https://nemulai.com/docs/agent#configuration
 
-ALUMINATAI_API_KEY={api_key}
-ALUMINATAI_API_ENDPOINT=https://nemulai.com/api/metrics/ingest
+NEMULAI_API_KEY={api_key}
+NEMULAI_API_ENDPOINT=https://nemulai.com/api/metrics/ingest
 SAMPLE_INTERVAL=5.0
 UPLOAD_INTERVAL=60
 METRICS_PORT=9100
@@ -1968,7 +1970,7 @@ def _cmd_service(args) -> int:
         existing_key = ""
         if _ENV_PATH.exists():
             for line in _ENV_PATH.read_text().splitlines():
-                if line.startswith("ALUMINATAI_API_KEY="):
+                if line.startswith("NEMULAI_API_KEY="):
                     existing_key = line.split("=", 1)[1].strip()
                     break
         if existing_key:
@@ -2080,10 +2082,10 @@ def main() -> int:
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Environment variables and config file (lowest to highest priority):
-  Config file  (--config path.json or ALUMINATAI_CONFIG env var)
-  ALUMINATAI_API_KEY        API key (alum_...)
-  ALUMINATAI_API_ENDPOINT   Ingest URL
-  ALUMINATAI_JOB_UUID       DB job UUID for completion signal
+  Config file  (--config path.json or NEMULAI_CONFIG env var)
+  NEMULAI_API_KEY        API key (alum_...)
+  NEMULAI_API_ENDPOINT   Ingest URL
+  NEMULAI_JOB_UUID       DB job UUID for completion signal
   SAMPLE_INTERVAL           Sampling interval in seconds (default: 5.0)
   UPLOAD_INTERVAL           Upload flush interval in seconds (default: 60)
   LOG_LEVEL                 DEBUG / INFO / WARNING / ERROR (default: INFO)
@@ -2109,7 +2111,7 @@ Examples:
         """,
     )
     parser.add_argument("--config", "-c", type=str, default=None,
-                        help="JSON or YAML config file path (also: ALUMINATAI_CONFIG env var)")
+                        help="JSON or YAML config file path (also: NEMULAI_CONFIG env var)")
     parser.add_argument("--interval", "-i", type=float, default=None,
                         help="Sampling interval in seconds (default: SAMPLE_INTERVAL or 5.0)")
     parser.add_argument("--output", "-o", type=str, default=None,
@@ -2158,8 +2160,8 @@ Examples:
 
     svc_install = service_sub.add_parser("install", help="Install and start the systemd service")
     svc_install.add_argument(
-        "--api-key", dest="api_key", default=os.environ.get("ALUMINATAI_API_KEY", ""),
-        help="API key (default: ALUMINATAI_API_KEY env var)",
+        "--api-key", dest="api_key", default=env("NEMULAI_API_KEY", ""),
+        help="API key (default: NEMULAI_API_KEY env var)",
     )
     svc_install.add_argument(
         "--update-env", action="store_true",
@@ -2174,8 +2176,8 @@ Examples:
     # Apply --config if provided (already applied in cli.py for installed entry-point;
     # this handles the case where agent.py is run directly with python agent.py).
     if args.command not in ("replay", "service") and getattr(args, "config", None):
-        if not os.environ.get("ALUMINATAI_CONFIG"):
-            os.environ["ALUMINATAI_CONFIG"] = args.config
+        if not env("NEMULAI_CONFIG"):
+            os.environ["NEMULAI_CONFIG"] = args.config
 
     if args.command == "replay":
         return _cmd_replay(args)
@@ -2190,7 +2192,7 @@ Examples:
 
     if not UPLOAD_ENABLED and not args.dry_run and not args.prometheus_only:
         log.warning(
-            "ALUMINATAI_API_KEY is not set — metrics will NOT be uploaded to the dashboard. "
+            "NEMULAI_API_KEY is not set — metrics will NOT be uploaded to the dashboard. "
             "Get your API key at https://nemulai.com/dashboard"
         )
 

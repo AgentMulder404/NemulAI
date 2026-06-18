@@ -42,6 +42,8 @@ import argparse
 import gc
 import json
 import os
+
+from envcompat import env
 import signal
 import subprocess
 import sys
@@ -412,14 +414,14 @@ def phase2_start_agent(config: CustomerConfig, dry_run: bool = False) -> Optiona
 
     env = os.environ.copy()
     env.update({
-        "ALUMINATAI_TEAM": config.team,
-        "ALUMINATAI_LOG_LEVEL": config.log_level,
-        "ALUMINATAI_SAMPLE_INTERVAL": str(config.sample_interval),
+        "NEMULAI_TEAM": config.team,
+        "NEMULAI_LOG_LEVEL": config.log_level,
+        "NEMULAI_SAMPLE_INTERVAL": str(config.sample_interval),
     })
     if config.api_key:
-        env["ALUMINATAI_API_KEY"] = config.api_key
+        env["NEMULAI_API_KEY"] = config.api_key
     if config.upload:
-        env["ALUMINATAI_API_ENDPOINT"] = config.api_endpoint
+        env["NEMULAI_API_ENDPOINT"] = config.api_endpoint
 
     log(f"  Team: {config.team}")
     log(f"  Sample interval: {config.sample_interval}s")
@@ -1072,7 +1074,7 @@ def main():
     parser.add_argument("--upload", action="store_true",
                         help="Upload metrics to NemulAI (requires API key)")
     parser.add_argument("--api-key", default="",
-                        help="NemulAI API key (or set ALUMINATAI_API_KEY)")
+                        help="NemulAI API key (or set NEMULAI_API_KEY)")
     parser.add_argument("--phase", type=int, default=0,
                         help="Run specific phase only (1-6, 0=all)")
     parser.add_argument("--dry-run", action="store_true",
@@ -1096,7 +1098,7 @@ def main():
 
     config = CustomerConfig(
         team=args.team,
-        api_key=args.api_key or os.getenv("ALUMINATAI_API_KEY", ""),
+        api_key=args.api_key or env("NEMULAI_API_KEY", ""),
         gpu_index=args.gpu,
         upload=args.upload,
     )

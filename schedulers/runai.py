@@ -22,7 +22,7 @@ metadata than raw K8s pod inspection when Run:ai is the scheduler.
 
 Attribution convention:
   team_id:   Run:ai project name
-  model_tag: ALUMINATAI_MODEL env var, or job annotation
+  model_tag: NEMULAI_MODEL env var, or job annotation
   user:      Run:ai job submitter
 
 Configuration via environment:
@@ -33,6 +33,11 @@ Configuration via environment:
 """
 
 import os
+
+try:
+    from ..envcompat import env
+except (ImportError, ValueError):  # bare execution with repo root on sys.path
+    from envcompat import env
 import socket
 import logging
 from typing import Optional
@@ -96,7 +101,7 @@ class RunaiAdapter(SchedulerAdapter):
         project = os.getenv("RUNAI_PROJECT", "default")
         user = os.getenv("RUNAI_USER", os.getenv("USER", "unknown"))
         job_id = os.getenv("RUNAI_JOB_UUID", f"runai-{job_name}")
-        model_tag = os.getenv("ALUMINATAI_MODEL", "untagged")
+        model_tag = env("NEMULAI_MODEL", "untagged")
 
         gpu_indices = self._resolve_local_gpus()
 
