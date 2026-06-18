@@ -1,0 +1,39 @@
+NemulAI — GPU Cost Attribution & Waste Detection Agent
+Copyright 2026 NemulAI
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+--------------------------------------------------------------------------------
+
+This product includes software developed for NemulAI (https://nemulai.com).
+
+The name "NemulAI" and associated logos are trademarks of the project owner.
+Forks and derivative works are welcome under the Apache 2.0 license, but may
+not use the "NemulAI" name or logo to represent their products without explicit
+written permission.
+
+Original repository: https://github.com/AgentMulder404/NemulAI
+
+--------------------------------------------------------------------------------
+
+Third-party dependencies are distributed under their own licenses. Notable
+runtime dependencies include:
+
+  - nvidia-ml-py (NVML bindings) ... BSD-3-Clause
+  - requests ....................... Apache-2.0
+  - python-dotenv .................. BSD-3-Clause
+  - rich ........................... MIT
+
+Optional extras (prometheus-client, cryptography, PyYAML, numpy,
+vowpalwabbit, torch, transformers, and others) are governed by their
+respective upstream licenses.

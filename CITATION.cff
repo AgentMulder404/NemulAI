@@ -1,0 +1,28 @@
+cff-version: 1.2.0
+message: "If you use NemulAI in your research, please cite it as below."
+type: software
+title: "NemulAI: Per-Job GPU Cost Attribution and Waste Detection"
+abstract: >
+  NemulAI is an open-source Python agent for real-time GPU cost attribution,
+  per-job and per-team energy accounting, and idle/underutilization waste
+  detection in AI/ML infrastructure. It samples power draw via NVML
+  (nvidia-ml-py) and vendor SDKs for AMD, Intel, and Apple Silicon, attributes
+  energy cost to individual training and inference jobs, and prices it at the
+  operator's GPU rate. Read-only by default.
+authors:
+  - name: "NemulAI"
+    website: "https://nemulai.com"
+repository-code: "https://github.com/AgentMulder404/NemulAI"
+url: "https://nemulai.com"
+license: Apache-2.0
+version: "0.4.0"
+date-released: "2026-06-18"
+keywords:
+  - GPU cost attribution
+  - waste detection
+  - energy monitoring
+  - chargeback
+  - MLOps
+  - NVML
+  - nvidia-ml-py
+  - AI infrastructure

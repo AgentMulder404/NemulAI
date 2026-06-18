@@ -1,0 +1,50 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+*.egg
+build/
+dist/
+.eggs/
+*.so
+.Python
+.venv/
+venv/
+env/
+ENV/
+
+# Tests / coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.mypy_cache/
+.ruff_cache/
+
+# Secrets & environment — never commit real values
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.crt
+*.p12
+*.pfx
+id_rsa*
+
+# Agent runtime artifacts
+data/wal/*.wal
+data/wal/*.quarantine
+data/**/*.db
+data/**/*.sqlite*
+logs/*.log
+!data/.gitkeep
+!data/wal/.gitkeep
+!logs/.gitkeep
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+*.swp
