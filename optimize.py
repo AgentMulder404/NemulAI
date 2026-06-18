@@ -662,7 +662,7 @@ def run_optimize(args: argparse.Namespace) -> int:
         return 1
 
     arch = resolve_arch(gpu_name)
-    carbon_client = ElectricityMapsClient()  # uses ALUMINATAI_GRID_ZONE from env
+    carbon_client = ElectricityMapsClient()  # uses NEMULAI_GRID_ZONE from env
     analyzer = WorkloadAnalyzer(arch_spec=arch, carbon_client=carbon_client)
     result = analyzer.analyze(samples, gpu_name, gpu_index, float(duration))
 

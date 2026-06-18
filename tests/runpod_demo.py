@@ -448,7 +448,7 @@ def main():
         console.print(
             f"  Idle power : [yellow]{idle_w:.1f} W[/]\n"
             f"  Idle cost  : [red]${idle_cost_mo:.2f}/month[/] if left running 24/7 — "
-            "[dim]NemulAI detects this and bills to ALUMINATAI_IDLE_TEAM[/]"
+            "[dim]NemulAI detects this and bills to NEMULAI_IDLE_TEAM[/]"
         )
     else:
         print(f"  Idle power : {idle_w:.1f} W")
@@ -499,7 +499,7 @@ def main():
             "  Each workload above would be attributed to the team that owns its\n"
             "  process (via SLURM_JOB_ID, env vars, or cmdline heuristics).\n\n"
             "  [bold]To start the daemon:[/]\n"
-            "    ALUMINATAI_API_KEY=alum_... ALUMINATAI_TEAM=my-team \\\n"
+            "    NEMULAI_API_KEY=alum_... NEMULAI_TEAM=my-team \\\n"
             "      python3 -m agent --log-level INFO\n\n"
             "  [bold]To run a benchmark and submit to the Green AI Index:[/]\n"
             "    python3 -m benchmark --throughput TOKEN_RATE --upload\n"

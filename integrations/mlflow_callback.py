@@ -34,14 +34,19 @@ Or use as a context manager:
         # ... training code ...
 
 Env vars:
-    ALUMINATAI_API_KEY        Required for cost lookup
-    ALUMINATAI_API_ENDPOINT   API base URL (default: production)
+    NEMULAI_API_KEY        Required for cost lookup
+    NEMULAI_API_ENDPOINT   API base URL (default: production)
 """
 
 from __future__ import annotations
 
 import logging
 import os
+
+try:
+    from ..envcompat import env
+except (ImportError, ValueError):  # bare execution with repo root on sys.path
+    from envcompat import env
 import time
 from contextlib import contextmanager
 from typing import Generator, Optional
@@ -60,8 +65,8 @@ class NemulAIMLflowCallback:
     Logs GPU energy and cost to MLflow runs.
 
     On run start:
-      - Sets ALUMINATAI_MODEL to the run name
-      - Sets ALUMINATAI_TEAM to the experiment name
+      - Sets NEMULAI_MODEL to the run name
+      - Sets NEMULAI_TEAM to the experiment name
 
     On run end:
       - Fetches energy metrics from NemulAI API (last 24h filtered by job UUID)
@@ -73,9 +78,8 @@ class NemulAIMLflowCallback:
         api_key: Optional[str] = None,
         api_endpoint: Optional[str] = None,
     ):
-        self.api_key = api_key or os.getenv("ALUMINATAI_API_KEY", "")
-        self.api_endpoint = api_endpoint or os.getenv(
-            "ALUMINATAI_API_ENDPOINT", "https://nemulai.com/api/metrics/ingest"
+        self.api_key = api_key or env("NEMULAI_API_KEY", "")
+        self.api_endpoint = api_endpoint or env("NEMULAI_API_ENDPOINT", "https://nemulai.com/api/metrics/ingest"
         )
         self._start_times: dict[str, float] = {}
 
@@ -93,8 +97,8 @@ class NemulAIMLflowCallback:
             experiment = client.get_experiment(run.info.experiment_id)
             run_name = run.info.run_name or run_id[:8]
 
-            os.environ["ALUMINATAI_MODEL"] = run_name
-            os.environ["ALUMINATAI_TEAM"] = experiment.name
+            os.environ["NEMULAI_MODEL"] = run_name
+            os.environ["NEMULAI_TEAM"] = experiment.name
             logger.info(
                 "NemulAI: tracking run '%s' in experiment '%s'",
                 run_name, experiment.name
@@ -130,8 +134,8 @@ class NemulAIMLflowCallback:
             logger.warning("NemulAI MLflow on_run_end: %s", exc)
         finally:
             # Clean up env vars
-            os.environ.pop("ALUMINATAI_MODEL", None)
-            os.environ.pop("ALUMINATAI_TEAM", None)
+            os.environ.pop("NEMULAI_MODEL", None)
+            os.environ.pop("NEMULAI_TEAM", None)
 
     @contextmanager
     def track(self, run) -> Generator[None, None, None]:

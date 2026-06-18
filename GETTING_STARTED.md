@@ -16,7 +16,7 @@ pip install nemulai
 ## Start monitoring
 
 ```bash
-export ALUMINATAI_API_KEY=alum_your_key_here
+export NEMULAI_API_KEY=alum_your_key_here
 nemulai
 ```
 
@@ -41,8 +41,8 @@ Or on other hardware:
 Set env vars before launching your training job:
 
 ```bash
-ALUMINATAI_TEAM=nlp-team \
-ALUMINATAI_MODEL=llama3-finetune \
+NEMULAI_TEAM=nlp-team \
+NEMULAI_MODEL=llama3-finetune \
 python train.py
 ```
 
@@ -108,7 +108,7 @@ kubectl apply -f deploy/k8s/daemonset.yaml
 
 ```bash
 docker run --rm --runtime=nvidia --pid=host \
-  -e ALUMINATAI_API_KEY=alum_your_key_here \
+  -e NEMULAI_API_KEY=alum_your_key_here \
   ghcr.io/agentmulder404/nemulai-agent:latest
 ```
 
@@ -173,7 +173,7 @@ nemulai
 The Advisor tier surfaces GPU optimization recommendations in your dashboard and lets you apply them with one click.
 
 ```bash
-export ALUMINATAI_API_KEY=alum_your_key_here
+export NEMULAI_API_KEY=alum_your_key_here
 export AUTO_TUNE_ENABLED=1          # enable roofline analysis
 export COMMAND_POLL_ENABLED=1       # enable command execution
 nemulai
@@ -196,11 +196,11 @@ The dashboard auto-refreshes every 15 seconds.
 The Swarm tier coordinates optimization across all your GPU nodes. One agent becomes the fleet leader and evaluates policies across every machine.
 
 ```bash
-export ALUMINATAI_API_KEY=alum_your_key_here
+export NEMULAI_API_KEY=alum_your_key_here
 export AUTO_TUNE_ENABLED=1
 export COMMAND_POLL_ENABLED=1
 export SWARM_ENABLED=1              # participate in leader election
-export ALUMINATAI_CLUSTER_TAG=prod  # group by cluster (optional)
+export NEMULAI_CLUSTER_TAG=prod  # group by cluster (optional)
 nemulai
 ```
 

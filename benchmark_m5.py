@@ -45,6 +45,8 @@ Usage:
 import argparse
 import json
 import os
+
+from envcompat import env
 import re
 import subprocess
 import sys
@@ -973,17 +975,17 @@ Examples:
     )
     parser.add_argument(
         "--api-key",
-        default=os.getenv("ALUMINATAI_API_KEY", ""),
-        help="NemulAI API key for dashboard upload (env: ALUMINATAI_API_KEY)",
+        default=env("NEMULAI_API_KEY", ""),
+        help="NemulAI API key for dashboard upload (env: NEMULAI_API_KEY)",
     )
     parser.add_argument(
         "--api-endpoint",
-        default=os.getenv("ALUMINATAI_API_ENDPOINT", DEFAULT_API_ENDPOINT),
-        help="Metrics ingestion endpoint (env: ALUMINATAI_API_ENDPOINT)",
+        default=env("NEMULAI_API_ENDPOINT", DEFAULT_API_ENDPOINT),
+        help="Metrics ingestion endpoint (env: NEMULAI_API_ENDPOINT)",
     )
     parser.add_argument(
         "--mlx-model",
-        default=os.getenv("ALUMINATAI_MLX_MODEL", DEFAULT_MLX_MODEL),
+        default=env("NEMULAI_MLX_MODEL", DEFAULT_MLX_MODEL),
         help=f"HuggingFace model ID for MLX fine-tuning job (default: {DEFAULT_MLX_MODEL})",
     )
     all_job_names = list(JOBS.keys()) + [MLX_JOB_NAME]

@@ -34,6 +34,8 @@ import urllib.error
 import urllib.request
 from typing import Optional
 
+from envcompat import env
+
 try:
     import pynvml  # type: ignore[import-untyped]
 except ImportError:
@@ -260,9 +262,8 @@ def _upload(report: dict, model_tag: str) -> None:
     """POST benchmark result to /api/benchmarks/hardware."""
     import os
 
-    api_key = os.getenv("ALUMINATAI_API_KEY", "")
-    endpoint = os.getenv(
-        "ALUMINATAI_API_ENDPOINT",
+    api_key = env("NEMULAI_API_KEY", "")
+    endpoint = env("NEMULAI_API_ENDPOINT",
         "https://nemulai.com/v1/metrics/ingest",
     )
     # Derive base URL from ingest endpoint

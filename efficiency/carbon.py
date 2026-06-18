@@ -22,7 +22,7 @@ and CLI tools can:
   - Recommend scheduling batch jobs during green hours
   - Compare carbon cost across regions
 
-Requires ALUMINATAI_GRID_ZONE (e.g. "US-CAL-CISO") in config.
+Requires NEMULAI_GRID_ZONE (e.g. "US-CAL-CISO") in config.
 Optionally uses ELECTRICITY_MAPS_API_KEY for authenticated access
 (higher rate limits + forecast endpoint).
 
@@ -32,6 +32,11 @@ from __future__ import annotations
 
 import json
 import os
+
+try:
+    from ..envcompat import env
+except (ImportError, ValueError):  # bare execution with repo root on sys.path
+    from envcompat import env
 import time
 import urllib.error
 import urllib.request
@@ -111,7 +116,7 @@ class ElectricityMapsClient:
     """
 
     def __init__(self, zone: Optional[str] = None, api_key: Optional[str] = None):
-        self.zone = zone or os.getenv("ALUMINATAI_GRID_ZONE", "")
+        self.zone = zone or env("NEMULAI_GRID_ZONE", "")
         self.api_key = api_key or os.getenv("ELECTRICITY_MAPS_API_KEY", "")
         self._cache: Optional[CarbonIntensity] = None
         self._cache_time: float = 0.0
@@ -135,7 +140,7 @@ class ElectricityMapsClient:
             )
 
         if not self.zone:
-            return self._fallback("No ALUMINATAI_GRID_ZONE configured")
+            return self._fallback("No NEMULAI_GRID_ZONE configured")
 
         try:
             data = self._request(f"/carbon-intensity/latest?zone={self.zone}")

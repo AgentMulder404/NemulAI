@@ -27,6 +27,11 @@ Detection order (first match wins):
 """
 
 import os
+
+try:
+    from ..envcompat import env
+except (ImportError, ValueError):  # bare execution with repo root on sys.path
+    from envcompat import env
 import shutil
 import logging
 
@@ -39,11 +44,11 @@ def detect_scheduler() -> SchedulerAdapter:
     """
     Auto-detect the active scheduler and return the appropriate adapter.
 
-    Can be overridden with ALUMINATAI_SCHEDULER env var:
+    Can be overridden with NEMULAI_SCHEDULER env var:
       "kubernetes", "slurm", "runai", "none"
     """
     # Manual override
-    override = os.getenv("ALUMINATAI_SCHEDULER", "").lower().strip()
+    override = env("NEMULAI_SCHEDULER", "").lower().strip()
     if override:
         return _create_adapter(override)
 

@@ -47,7 +47,7 @@ spec:
             capabilities:
               drop: ["ALL"]
           env:
-            - name: ALUMINATAI_API_KEY
+            - name: NEMULAI_API_KEY
               valueFrom:
                 secretKeyRef:
                   name: nemulai
@@ -57,7 +57,7 @@ spec:
                 fieldRef:
                   fieldPath: spec.nodeName
             # Surface the k8s namespace as the default team tag.
-            - name: ALUMINATAI_TEAM
+            - name: NEMULAI_TEAM
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace

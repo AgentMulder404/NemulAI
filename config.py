@@ -17,12 +17,15 @@
 Configuration for NemulAI GPU Agent v0.2.2
 
 Priority (highest to lowest):
-  1. Environment variables (ALUMINATAI_*, SAMPLE_INTERVAL, …)
-  2. Config file  (ALUMINATAI_CONFIG=/path/to/file.json|yaml)
+  1. Environment variables (NEMULAI_*, SAMPLE_INTERVAL, …)
+  2. Config file  (NEMULAI_CONFIG=/path/to/file.json|yaml)
   3. Built-in defaults
 
+Legacy ALUMINATAI_* variable names are still honored as a fallback for agents
+deployed before the rebrand (see envcompat.env).
+
 Config file is JSON or YAML (YAML requires pip install nemulai[observability]).
-Default search order when ALUMINATAI_CONFIG is unset:
+Default search order when NEMULAI_CONFIG is unset:
   ./nemulai.json → ./nemulai.yaml → ~/.config/nemulai/config.json
 """
 import json
@@ -31,6 +34,8 @@ import os
 import sys
 from pathlib import Path
 
+from envcompat import env, is_set
+
 # ── Version ───────────────────────────────────────────────────────────────────
 
 AGENT_VERSION = "0.2.2"
@@ -38,8 +43,8 @@ AGENT_VERSION = "0.2.2"
 # ── Config-file → env-var mapping ─────────────────────────────────────────────
 
 _CONFIG_KEY_TO_ENV: dict[str, str] = {
-    "api_key":                  "ALUMINATAI_API_KEY",
-    "api_endpoint":             "ALUMINATAI_API_ENDPOINT",
+    "api_key":                  "NEMULAI_API_KEY",
+    "api_endpoint":             "NEMULAI_API_ENDPOINT",
     "sample_interval":          "SAMPLE_INTERVAL",
     "upload_interval":          "UPLOAD_INTERVAL",
     "upload_batch_size":        "UPLOAD_BATCH_SIZE",
@@ -61,31 +66,31 @@ _CONFIG_KEY_TO_ENV: dict[str, str] = {
     "data_dir":                 "DATA_DIR",
     "log_dir":                  "LOG_DIR",
     "https_proxy":              "HTTPS_PROXY",
-    "ca_bundle":                "ALUMINATAI_CA_BUNDLE",
-    "client_cert":              "ALUMINATAI_CLIENT_CERT",
-    "client_key":               "ALUMINATAI_CLIENT_KEY",
-    "attribution_config":       "ALUMINATAI_ATTRIBUTION_CONFIG",
-    "trusted_uids":             "ALUMINATAI_TRUSTED_UIDS",
-    "cluster_tag":              "ALUMINATAI_CLUSTER_TAG",
-    "location_hint":            "ALUMINATAI_LOCATION_HINT",
-    "grid_zone":                "ALUMINATAI_GRID_ZONE",
+    "ca_bundle":                "NEMULAI_CA_BUNDLE",
+    "client_cert":              "NEMULAI_CLIENT_CERT",
+    "client_key":               "NEMULAI_CLIENT_KEY",
+    "attribution_config":       "NEMULAI_ATTRIBUTION_CONFIG",
+    "trusted_uids":             "NEMULAI_TRUSTED_UIDS",
+    "cluster_tag":              "NEMULAI_CLUSTER_TAG",
+    "location_hint":            "NEMULAI_LOCATION_HINT",
+    "grid_zone":                "NEMULAI_GRID_ZONE",
     "idle_baseline_window":     "IDLE_BASELINE_WINDOW",
     "warmup_discard_seconds":   "WARMUP_DISCARD_SECONDS",
     "dcgm_enabled":             "DCGM_ENABLED",
     "pid_smooth_window":        "PID_SMOOTH_WINDOW",
     "pid_stable_threshold":     "PID_STABLE_THRESHOLD",
-    "learner_enabled":          "ALUMINATAI_LEARNER_ENABLED",
-    "learner_outcome_window":   "ALUMINATAI_LEARNER_OUTCOME_WINDOW",
-    "learner_upload_enabled":   "ALUMINATAI_LEARNER_UPLOAD",
-    "bandit_enabled":           "ALUMINATAI_BANDIT_ENABLED",
-    "bandit_epsilon":           "ALUMINATAI_BANDIT_EPSILON",
-    "bandit_retrain_every":     "ALUMINATAI_BANDIT_RETRAIN_EVERY",
-    "bandit_auto_apply":        "ALUMINATAI_BANDIT_AUTO_APPLY",
-    "bandit_min_corpus":        "ALUMINATAI_BANDIT_MIN_CORPUS",
-    "intelligence_enabled":     "ALUMINATAI_INTELLIGENCE_ENABLED",
-    "intelligence_hf_limit":    "ALUMINATAI_INTELLIGENCE_HF_LIMIT",
-    "intelligence_min_downloads": "ALUMINATAI_INTELLIGENCE_MIN_DOWNLOADS",
-    "intelligence_min_confidence": "ALUMINATAI_INTELLIGENCE_MIN_CONFIDENCE",
+    "learner_enabled":          "NEMULAI_LEARNER_ENABLED",
+    "learner_outcome_window":   "NEMULAI_LEARNER_OUTCOME_WINDOW",
+    "learner_upload_enabled":   "NEMULAI_LEARNER_UPLOAD",
+    "bandit_enabled":           "NEMULAI_BANDIT_ENABLED",
+    "bandit_epsilon":           "NEMULAI_BANDIT_EPSILON",
+    "bandit_retrain_every":     "NEMULAI_BANDIT_RETRAIN_EVERY",
+    "bandit_auto_apply":        "NEMULAI_BANDIT_AUTO_APPLY",
+    "bandit_min_corpus":        "NEMULAI_BANDIT_MIN_CORPUS",
+    "intelligence_enabled":     "NEMULAI_INTELLIGENCE_ENABLED",
+    "intelligence_hf_limit":    "NEMULAI_INTELLIGENCE_HF_LIMIT",
+    "intelligence_min_downloads": "NEMULAI_INTELLIGENCE_MIN_DOWNLOADS",
+    "intelligence_min_confidence": "NEMULAI_INTELLIGENCE_MIN_CONFIDENCE",
 }
 
 
@@ -96,7 +101,7 @@ def _load_config_file() -> None:
     Env vars already set in the process environment are never overridden —
     explicit env vars always take precedence over the config file.
     """
-    path = os.getenv("ALUMINATAI_CONFIG", "")
+    path = env("NEMULAI_CONFIG", "")
     if not path:
         candidates = [
             "nemulai.json",
@@ -137,8 +142,8 @@ def _load_config_file() -> None:
         env_var = _CONFIG_KEY_TO_ENV.get(key)
         if not env_var:
             continue
-        if env_var in os.environ:
-            continue  # env var wins
+        if is_set(env_var):
+            continue  # env var wins (current or legacy name)
         # Booleans → "1" or "" so downstream bool() and .lower() parsing works
         if isinstance(value, bool):
             os.environ[env_var] = "1" if value else ""
@@ -156,8 +161,8 @@ _load_config_file()
 
 # ── API Configuration ─────────────────────────────────────────────────────────
 
-API_ENDPOINT = os.getenv("ALUMINATAI_API_ENDPOINT", "https://www.nemulai.com/v1/metrics/ingest")
-API_KEY = os.getenv("ALUMINATAI_API_KEY", "")
+API_ENDPOINT = env("NEMULAI_API_ENDPOINT", "https://www.nemulai.com/v1/metrics/ingest")
+API_KEY = env("NEMULAI_API_KEY", "")
 
 # ── Upload Configuration ──────────────────────────────────────────────────────
 
@@ -287,9 +292,9 @@ CLOUD_COST_ENABLED = os.getenv("CLOUD_COST_ENABLED", "1").lower() not in ("0", "
 
 # ── Cluster Identity ───────────────────────────────────────────────────────────
 
-CLUSTER_TAG   = os.getenv("ALUMINATAI_CLUSTER_TAG", "")    # e.g. "aws-us-west-2"
-LOCATION_HINT = os.getenv("ALUMINATAI_LOCATION_HINT", "")  # free-text, shown in UI
-GRID_ZONE     = os.getenv("ALUMINATAI_GRID_ZONE", "")      # Electricity Maps zone, e.g. "US-CAL-CISO"
+CLUSTER_TAG   = env("NEMULAI_CLUSTER_TAG", "")    # e.g. "aws-us-west-2"
+LOCATION_HINT = env("NEMULAI_LOCATION_HINT", "")  # free-text, shown in UI
+GRID_ZONE     = env("NEMULAI_GRID_ZONE", "")      # Electricity Maps zone, e.g. "US-CAL-CISO"
 
 # How often the agent polls GET /api/v1/tag for user-registered job tags.
 # Defaults to the same cadence as the scheduler poll.
@@ -330,32 +335,32 @@ SWARM_MAX_RECS = int(os.getenv("SWARM_MAX_RECS", "20"))
 
 # ── Self-Learning Agent ──────────────────────────────────────────────────────
 
-LEARNER_ENABLED = os.getenv("ALUMINATAI_LEARNER_ENABLED", "").lower() in ("1", "true", "yes")
-LEARNER_OUTCOME_WINDOW = int(os.getenv("ALUMINATAI_LEARNER_OUTCOME_WINDOW", "300"))
-LEARNER_UPLOAD_ENABLED = os.getenv("ALUMINATAI_LEARNER_UPLOAD", "").lower() in ("1", "true", "yes")
+LEARNER_ENABLED = env("NEMULAI_LEARNER_ENABLED", "").lower() in ("1", "true", "yes")
+LEARNER_OUTCOME_WINDOW = int(env("NEMULAI_LEARNER_OUTCOME_WINDOW", "300"))
+LEARNER_UPLOAD_ENABLED = env("NEMULAI_LEARNER_UPLOAD", "").lower() in ("1", "true", "yes")
 EXPERIENCE_DIR = DATA_DIR / "experience"
 
 # ── Contextual Bandit (Phase 2) ──────────────────────────────────────────────
 
-BANDIT_ENABLED = os.getenv("ALUMINATAI_BANDIT_ENABLED", "").lower() in ("1", "true", "yes")
-BANDIT_EPSILON = float(os.getenv("ALUMINATAI_BANDIT_EPSILON", "0.1"))
-BANDIT_RETRAIN_EVERY = int(os.getenv("ALUMINATAI_BANDIT_RETRAIN_EVERY", "500"))
-BANDIT_AUTO_APPLY = os.getenv("ALUMINATAI_BANDIT_AUTO_APPLY", "").lower() in ("1", "true", "yes")
-BANDIT_MIN_CORPUS = int(os.getenv("ALUMINATAI_BANDIT_MIN_CORPUS", "1000"))
+BANDIT_ENABLED = env("NEMULAI_BANDIT_ENABLED", "").lower() in ("1", "true", "yes")
+BANDIT_EPSILON = float(env("NEMULAI_BANDIT_EPSILON", "0.1"))
+BANDIT_RETRAIN_EVERY = int(env("NEMULAI_BANDIT_RETRAIN_EVERY", "500"))
+BANDIT_AUTO_APPLY = env("NEMULAI_BANDIT_AUTO_APPLY", "").lower() in ("1", "true", "yes")
+BANDIT_MIN_CORPUS = int(env("NEMULAI_BANDIT_MIN_CORPUS", "1000"))
 
 # ── Model Intelligence Pipeline ─────────────────────────────────────────────
 
-INTELLIGENCE_ENABLED = os.getenv("ALUMINATAI_INTELLIGENCE_ENABLED", "").lower() in ("1", "true", "yes")
-INTELLIGENCE_HF_LIMIT = int(os.getenv("ALUMINATAI_INTELLIGENCE_HF_LIMIT", "20"))
-INTELLIGENCE_MIN_DOWNLOADS = int(os.getenv("ALUMINATAI_INTELLIGENCE_MIN_DOWNLOADS", "1000"))
-INTELLIGENCE_MIN_CONFIDENCE = float(os.getenv("ALUMINATAI_INTELLIGENCE_MIN_CONFIDENCE", "0.5"))
+INTELLIGENCE_ENABLED = env("NEMULAI_INTELLIGENCE_ENABLED", "").lower() in ("1", "true", "yes")
+INTELLIGENCE_HF_LIMIT = int(env("NEMULAI_INTELLIGENCE_HF_LIMIT", "20"))
+INTELLIGENCE_MIN_DOWNLOADS = int(env("NEMULAI_INTELLIGENCE_MIN_DOWNLOADS", "1000"))
+INTELLIGENCE_MIN_CONFIDENCE = float(env("NEMULAI_INTELLIGENCE_MIN_CONFIDENCE", "0.5"))
 
 # ── TLS / Proxy ───────────────────────────────────────────────────────────────
 
 HTTPS_PROXY = os.getenv("HTTPS_PROXY", "")
-CA_BUNDLE = os.getenv("ALUMINATAI_CA_BUNDLE", "")      # path to company CA PEM
-CLIENT_CERT = os.getenv("ALUMINATAI_CLIENT_CERT", "")  # mTLS client cert path
-CLIENT_KEY = os.getenv("ALUMINATAI_CLIENT_KEY", "")    # mTLS client key path
+CA_BUNDLE = env("NEMULAI_CA_BUNDLE", "")      # path to company CA PEM
+CLIENT_CERT = env("NEMULAI_CLIENT_CERT", "")  # mTLS client cert path
+CLIENT_KEY = env("NEMULAI_CLIENT_KEY", "")    # mTLS client key path
 
 # ── Prometheus Metrics Server ─────────────────────────────────────────────────
 
@@ -391,20 +396,20 @@ MEM_LEAK_WINDOW = int(os.getenv("MEM_LEAK_WINDOW", "60"))
 
 # ── Attribution ───────────────────────────────────────────────────────────────
 
-ATTRIBUTION_CONFIG = os.getenv("ALUMINATAI_ATTRIBUTION_CONFIG", "")
+ATTRIBUTION_CONFIG = env("NEMULAI_ATTRIBUTION_CONFIG", "")
 
 
 def _parse_trusted_uids() -> set:
-    """Parse ALUMINATAI_TRUSTED_UIDS=0,1000,1001 into a set of ints."""
+    """Parse NEMULAI_TRUSTED_UIDS=0,1000,1001 into a set of ints."""
     _log = logging.getLogger(__name__)
     result: set[int] = set()
-    for part in os.getenv("ALUMINATAI_TRUSTED_UIDS", "").split(","):
+    for part in env("NEMULAI_TRUSTED_UIDS", "").split(","):
         part = part.strip()
         if part:
             try:
                 result.add(int(part))
             except ValueError:
-                _log.warning("Ignoring invalid UID in ALUMINATAI_TRUSTED_UIDS: %r", part)
+                _log.warning("Ignoring invalid UID in NEMULAI_TRUSTED_UIDS: %r", part)
     return result
 
 

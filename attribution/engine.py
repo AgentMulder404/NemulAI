@@ -20,27 +20,32 @@ For each GPU handle + power reading, returns one or more AttributionResult
 objects representing each job's fractional share of the GPU power.
 
 Attribution confidence levels (and numeric scores):
-  "tagged"         1.00 — ALUMINATAI_TEAM/MODEL env var explicitly set by the user
+  "tagged"         1.00 — NEMULAI_TEAM/MODEL env var explicitly set by the user
   "api_tag"        0.95 — job registered via /api/v1/tag REST endpoint
   "scheduler"      0.90 — resolved via SLURM_JOB_ID / RUNAI_JOB_NAME / K8s pod UID
   "scheduler_poll" 0.75 — resolved via scheduler.gpu_to_job() (legacy poll path)
   "rules"          0.60 — matched by a custom attribution rules file
   "heuristic"      0.40 — matched by a built-in cmdline heuristic
   "memory_split"   0.20 — unresolved; power split proportionally by GPU memory usage
-  "idle"           0.30 — GPU is idle; billed to ALUMINATAI_IDLE_TEAM
+  "idle"           0.30 — GPU is idle; billed to NEMULAI_IDLE_TEAM
 
 Resolution priority (step 1 → 7):
-  1.   ALUMINATAI_TEAM/MODEL env var on the process                    → tagged (1.0)
+  1.   NEMULAI_TEAM/MODEL env var on the process                    → tagged (1.0)
   1.5  /api/v1/tag REST registration (via TagClient)                   → api_tag (0.95)
   2.   SLURM_JOB_ID / RUNAI_JOB_NAME / K8s pod UID on the process     → scheduler (0.9)
   3.   scheduler.gpu_to_job() poll                                      → scheduler_poll (0.75)
   4.   custom attribution rules file                                    → rules (0.6)
   5.   built-in cmdline heuristics                                      → heuristic (0.4)
   6.   GPU memory split (all unresolved processes)                      → memory_split (0.2)
-  7.   ALUMINATAI_IDLE_TEAM env var fallback                            → idle (0.3)
+  7.   NEMULAI_IDLE_TEAM env var fallback                            → idle (0.3)
 """
 
 import os
+
+try:
+    from ..envcompat import env
+except (ImportError, ValueError):  # bare execution with repo root on sys.path
+    from envcompat import env
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -59,14 +64,14 @@ logger = logging.getLogger(__name__)
 # Numeric confidence scores (0.0–1.0) for each attribution method.
 # Higher = more trustworthy attribution.
 CONFIDENCE_SCORES: dict[str, float] = {
-    "tagged":          1.00,   # explicit ALUMINATAI_TEAM env var on the process
+    "tagged":          1.00,   # explicit NEMULAI_TEAM env var on the process
     "api_tag":         0.95,   # job registered via /api/v1/tag REST endpoint
     "scheduler":       0.90,   # SLURM_JOB_ID / Run:ai / K8s pod UID on the process
     "scheduler_poll":  0.75,   # scheduler.gpu_to_job() fallback poll
     "rules":           0.60,   # custom attribution rules file regex match
     "heuristic":       0.40,   # built-in cmdline heuristic (jupyter, vllm, …)
     "memory_split":    0.20,   # unresolved; power split proportionally by GPU memory
-    "idle":            0.30,   # ALUMINATAI_IDLE_TEAM fallback
+    "idle":            0.30,   # NEMULAI_IDLE_TEAM fallback
 }
 
 # Estimated ± power-attribution uncertainty (percentage of reported power_w).
@@ -135,7 +140,7 @@ class AttributionEngine:
           1.5  For each resolved process, check TagClient for a REST-registered tag
           2.   Resolve each process to a job via env vars / scheduler / heuristics
           3.   Fallback: scheduler poll (single winner)
-          4.   Fallback: idle attribution if ALUMINATAI_IDLE_TEAM is set
+          4.   Fallback: idle attribution if NEMULAI_IDLE_TEAM is set
           5.   Return [] if no attribution configured (backward compat)
         """
         if sample_time is None:
@@ -242,7 +247,7 @@ class AttributionEngine:
                     confidence = _SOURCE_CONFIDENCE.get(scheduler_source, "scheduler")
                 else:
                     # Unresolved process — power split proportionally by GPU memory
-                    team_id = os.getenv("ALUMINATAI_IDLE_TEAM", "unresolved")
+                    team_id = env("NEMULAI_IDLE_TEAM", "unresolved")
                     model_tag = "untagged"
                     job_id = key
                     scheduler_source = "unresolved"
@@ -282,7 +287,7 @@ class AttributionEngine:
             )]
 
         # Fallback: idle
-        idle_team = os.getenv("ALUMINATAI_IDLE_TEAM")
+        idle_team = env("NEMULAI_IDLE_TEAM")
         if idle_team:
             logger.debug("GPU %d → idle fallback (team=%s)", gpu_index, idle_team)
             return [AttributionResult(

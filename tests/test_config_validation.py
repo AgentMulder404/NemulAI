@@ -11,8 +11,8 @@ class TestConfigValidation(unittest.TestCase):
     def _reload_config(self, env_overrides: dict):
         """Reload config module with custom env vars."""
         env = {
-            "ALUMINATAI_API_KEY": "",
-            "ALUMINATAI_CONFIG": "",
+            "NEMULAI_API_KEY": "",
+            "NEMULAI_CONFIG": "",
             **env_overrides,
         }
         with patch.dict(os.environ, env, clear=False):
